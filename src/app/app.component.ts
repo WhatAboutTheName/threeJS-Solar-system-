@@ -1,4 +1,4 @@
-import {Component, ElementRef, ViewChild, AfterViewInit, HostListener, OnInit} from '@angular/core';
+import {Component, ElementRef, ViewChild, AfterViewInit, HostListener} from '@angular/core';
 import {
   AmbientLight, BackSide, BufferGeometry,
   DoubleSide, Float32BufferAttribute,
@@ -6,7 +6,7 @@ import {
   MeshStandardMaterial, NearestFilter, Object3D,
   PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, RepeatWrapping,
   Scene,
-  SphereGeometry, TextureLoader, Vector2, Vector3,
+  SphereGeometry, TextureLoader, Vector3,
   WebGLRenderer
 } from 'three';
 import {PointerLockControls} from 'three/examples/jsm/controls/PointerLockControls';
@@ -14,7 +14,6 @@ import solaryImpotentObj from './solary-impotent-obj';
 import allSatellites from './all-satellites';
 import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
-import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +30,6 @@ export class AppComponent implements AfterViewInit {
   vector?: Vector3;
   controls?: PointerLockControls;
   renderer?: WebGLRenderer;
-  bloomPass?: UnrealBloomPass;
   bloomComposer?: EffectComposer;
 
   createdObjects: any = [];
@@ -138,8 +136,6 @@ export class AppComponent implements AfterViewInit {
     this.createScene();
     this.cameraPosition();
     this.wglRenderInit();
-    this.eComposer();
-    this.uBloomPass();
     this.renderCanvas();
     this.createSolarSystem();
     this.createFigure(this.spheres, 'spheres');
@@ -172,15 +168,13 @@ export class AppComponent implements AfterViewInit {
         (component.canvas as ElementRef<HTMLCanvasElement>).nativeElement.clientHeight
       );
       component.animateFigure();
-      // (component.bloomComposer as EffectComposer).renderer.render((component.scene as Scene), (component.camera as PerspectiveCamera));
-      (component.bloomComposer as EffectComposer).render(1);
-      // (component.renderer as WebGLRenderer).render((component.scene as Scene), (component.camera as PerspectiveCamera));
+      (component.renderer as WebGLRenderer).render((component.scene as Scene), (component.camera as PerspectiveCamera));
       requestAnimationFrame(render);
     }());
   }
 
   keyBoardControls(): void {
-    const speed = 8;
+    const speed = 10;
     if (this.moveForward) {
       this.controls?.moveForward(speed);
     }
@@ -275,7 +269,6 @@ export class AppComponent implements AfterViewInit {
   }
 
   sunLight(): void {
-    console.log(this.createdObjects, '   this.createdObjects');
     const light = new PointLight('#ffffff', 3, 0, 0);
     this.scene?.add(light);
   }
@@ -334,7 +327,7 @@ export class AppComponent implements AfterViewInit {
     const vertices1 = [];
     const vertices2 = [];
 
-    for (let i = 0; i < 750; i++) {
+    for (let i = 0; i < 1050; i++) {
       this.starsFactory();
       vertices1.push((this.vector as Vector3).x, (this.vector as Vector3).y, (this.vector as Vector3).z);
     }
@@ -373,24 +366,5 @@ export class AppComponent implements AfterViewInit {
     (this.vector as Vector3).y = Math.random() * 2 - 1;
     (this.vector as Vector3).z = Math.random() * 2 - 1;
     (this.vector as Vector3).multiplyScalar(200);
-  }
-
-  eComposer(): void {
-    this.bloomComposer = new EffectComposer((this.renderer as WebGLRenderer));
-    this.bloomComposer.setSize(window.innerWidth, window.innerHeight);
-
-    const renderPass = new RenderPass((this.scene as Scene), (this.camera as PerspectiveCamera));
-    renderPass.renderToScreen = false;
-
-    this.bloomComposer.addPass(renderPass);
-  }
-
-  uBloomPass(): void {
-    this.bloomPass = new UnrealBloomPass(new Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    this.bloomPass.threshold = 0;
-    this.bloomPass.strength = 5;
-    this.bloomPass.radius = 0;
-    (this.bloomComposer as EffectComposer).renderToScreen = true;
-    this.bloomComposer?.addPass((this.bloomPass as UnrealBloomPass));
   }
 }
